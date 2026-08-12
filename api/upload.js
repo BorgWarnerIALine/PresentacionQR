@@ -1,3 +1,8 @@
-export default function handler(req, res) {
-  res.status(200).json({ mensaje: "API funcionando" });
+export default async function handler(req, res) {
+
+    return res.status(200).json({
+        success: true,
+        mensaje: "API funcionando"
+    });
+
 }
