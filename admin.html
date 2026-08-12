@@ -61,6 +61,15 @@ const OWNER = "BorgWarnerIALine";
 const REPO = "PresentacionQR";
 const FILE = "presentacion.pdf";
 
+
+fetch("https://api.github.com/user", {
+    headers: {
+        "Authorization": `token ${TOKEN}`,
+        "Accept": "application/vnd.github+json"
+    }
+})
+.then(r => r.json())
+.then(console.log);
 async function actualizarPDF() {
 
     const archivo =
