@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Actualizar Presentación</title>
+
+<style>
+
+body{
+    font-family: Arial, sans-serif;
+    max-width: 600px;
+    margin: 40px auto;
+    padding: 20px;
+}
+
+h1{
+    text-align: center;
+}
+
+input{
+    margin-top: 15px;
+}
+
+button{
+    margin-top: 20px;
+    padding: 10px 20px;
+    cursor:pointer;
+}
+
+#resultado{
+    margin-top:20px;
+    font-weight:bold;
+}
+
+</style>
+
+</head>
+<body>
+
+<h1>Actualizar Presentación</h1>
+
+<input
+    type="file"
+    id="pdfFile"
+    accept=".pdf">
+
+<br>
+
+<button onclick="actualizarPDF()">
+    Actualizar Presentación
+</button>
+
+<div id="resultado"></div>
+
+<script>
+
+const TOKEN = "PEGA_AQUI_TU_TOKEN";
+const OWNER = "BorgWarnerIALine";
+const REPO = "PresentacionQR";
+const FILE = "presentacion.pdf";
+
+async function actualizarPDF() {
+
+    const archivo =
+        document.getElementById("pdfFile").files[0];
+
+    if (!archivo) {
+
+        alert("Selecciona un PDF");
+
+        return;
+    }
+
+    const resultado =
+        document.getElementById("resultado");
+
+    resultado.innerHTML =
+        "Actualizando...";
+
+    try {
+
+        // Obtener SHA actual
+
+        const fileResponse =
+            await fetch(
+                `https://api.github.com/repos/${OWNER}/${REPO}/contents/${FILE}`,
+                {
+                    headers: {
+                        Authorization: `Bearer ${TOKEN}`
+                    }
+                }
+            );
+
+        const fileInfo =
+            await fileResponse.json();
+
+        const sha =
+            fileInfo.sha;
+
+        // Leer PDF
+
+        const arrayBuffer =
+            await archivo.arrayBuffer();
+
+        let binary = "";
+
+        const bytes =
+            new Uint8Array(arrayBuffer);
+
+        for(let i = 0; i < bytes.length; i++){
+
+            binary +=
+                String.fromCharCode(bytes[i]);
+        }
+
+        const base64 =
+            btoa(binary);
+
+        // Actualizar
+
+        const updateResponse =
+            await fetch(
+                `https://api.github.com/repos/${OWNER}/${REPO}/contents/${FILE}`,
+                {
+                    method: "PUT",
+                    headers: {
+                        Authorization: `Bearer ${TOKEN}`,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        message: "Actualizar presentación",
+                        content: base64,
+                        sha: sha
+                    })
+                }
+            );
+
+        if(updateResponse.ok){
+
+            resultado.innerHTML =
+                "Presentación actualizada correctamente";
+
+        }
+        else{
+
+            const error =
+                await updateResponse.text();
+
+            resultado.innerHTML =
+                "Error:<br><br>" + error;
+        }
+
+    }
+    catch(ex){
+
+        resultado.innerHTML =
+            "Error: " + ex.message;
+    }
+
+}
+
+</script>
+
+</body>
+</html>
