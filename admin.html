@@ -3,37 +3,25 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>Actualizar Presentación</title>
 
 <style>
-
 body{
     font-family: Arial, sans-serif;
-    max-width: 600px;
-    margin: 40px auto;
-    padding: 20px;
-}
-
-h1{
-    text-align: center;
-}
-
-input{
-    margin-top: 15px;
+    max-width:600px;
+    margin:50px auto;
+    text-align:center;
 }
 
 button{
-    margin-top: 20px;
-    padding: 10px 20px;
-    cursor:pointer;
+    margin-top:20px;
+    padding:10px 20px;
 }
 
 #resultado{
     margin-top:20px;
     font-weight:bold;
 }
-
 </style>
 
 </head>
@@ -48,7 +36,7 @@ button{
 
 <br>
 
-<button onclick="actualizarPDF()">
+<button onclick="subirPDF()">
     Actualizar Presentación
 </button>
 
@@ -56,29 +44,14 @@ button{
 
 <script>
 
-const TOKEN = "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";
-const OWNER = "BorgWarnerIALine";
-const REPO = "PresentacionQR";
-const FILE = "presentacion.pdf";
-
-
-fetch("https://api.github.com/user", {
-    headers: {
-        "Authorization": `token ${TOKEN}`,
-        "Accept": "application/vnd.github+json"
-    }
-})
-.then(r => r.json())
-.then(console.log);
-async function actualizarPDF() {
+async function subirPDF(){
 
     const archivo =
         document.getElementById("pdfFile").files[0];
 
-    if (!archivo) {
+    if(!archivo){
 
         alert("Selecciona un PDF");
-
         return;
     }
 
@@ -86,90 +59,45 @@ async function actualizarPDF() {
         document.getElementById("resultado");
 
     resultado.innerHTML =
-        "Actualizando...";
+        "Subiendo presentación...";
 
-    try {
-console.log(TOKEN);
-        // Obtener SHA actual
+    const formData = new FormData();
 
-        const fileResponse =
+    formData.append(
+        "pdf",
+        archivo
+    );
+
+    try{
+
+        const response =
             await fetch(
-                `https://api.github.com/repos/${OWNER}/${REPO}/contents/${FILE}`,
+                "/api/upload",
                 {
-headers: {
-    "Authorization": `token ${TOKEN}`,
-    "Accept": "application/vnd.github+json",
-    "X-GitHub-Api-Version": "2022-11-28"
-}
+                    method:"POST",
+                    body: formData
                 }
             );
 
-        const fileInfo =
-            await fileResponse.json();
+        const data =
+            await response.json();
 
-        const sha =
-            fileInfo.sha;
-
-        // Leer PDF
-
-        const arrayBuffer =
-            await archivo.arrayBuffer();
-
-        let binary = "";
-
-        const bytes =
-            new Uint8Array(arrayBuffer);
-
-        for(let i = 0; i < bytes.length; i++){
-
-            binary +=
-                String.fromCharCode(bytes[i]);
-        }
-
-        const base64 =
-            btoa(binary);
-
-        // Actualizar
-
-        const updateResponse =
-            await fetch(
-                `https://api.github.com/repos/${OWNER}/${REPO}/contents/${FILE}`,
-                {
-                    method: "PUT",
-                    headers: {
-                        Authorization: `token ${TOKEN}`,
-                        "Content-Type": "application/json",
-                        "Accept": "application/vnd.github+json",
-"X-GitHub-Api-Version": "2022-11-28"
-                    },
-                    body: JSON.stringify({
-                        message: "Actualizar presentación",
-                        content: base64,
-                        sha: sha
-                    })
-                }
-            );
-
-        if(updateResponse.ok){
+        if(data.success){
 
             resultado.innerHTML =
                 "Presentación actualizada correctamente";
-
         }
         else{
 
-            const error =
-                await updateResponse.text();
-
             resultado.innerHTML =
-                "Error:<br><br>" + error;
+                 data.error;
         }
 
     }
     catch(ex){
 
         resultado.innerHTML =
-            "Error: " + ex.message;
+             ex.message;
     }
 
 }
