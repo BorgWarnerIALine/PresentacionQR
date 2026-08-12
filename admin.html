@@ -59,23 +59,38 @@ async function subirPDF(){
         document.getElementById("resultado");
 
     resultado.innerHTML =
-        "Subiendo presentación...";
-
-    const formData = new FormData();
-
-    formData.append(
-        "pdf",
-        archivo
-    );
+        "Actualizando presentación...";
 
     try{
+
+        const arrayBuffer =
+            await archivo.arrayBuffer();
+
+        const bytes =
+            new Uint8Array(arrayBuffer);
+
+        let binary = "";
+
+        for(let i = 0; i < bytes.length; i++){
+
+            binary +=
+                String.fromCharCode(bytes[i]);
+        }
+
+        const base64 =
+            btoa(binary);
 
         const response =
             await fetch(
                 "/api/upload",
                 {
-                    method:"POST",
-                    body: formData
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        pdf: base64
+                    })
                 }
             );
 
@@ -90,14 +105,14 @@ async function subirPDF(){
         else{
 
             resultado.innerHTML =
-                 data.error;
+                data.error;
         }
 
     }
     catch(ex){
 
         resultado.innerHTML =
-             ex.message;
+            ex.message;
     }
 
 }
